@@ -5,12 +5,12 @@
 #include <GL/gl.h>
 #include <GL/glut.h>
 
-enum {CSG_A, CSG_B, CSG_C,
-      CSG_A_U_B, CSG_A_U_C, CSG_B_U_C,
-      CSG_A_I_B, CSG_A_I_C, CSG_B_I_C,
-      CSG_A_S_B, CSG_B_S_A,
-      CSG_A_S_C, CSG_C_S_A,
-      CSG_B_S_C, CSG_C_S_B};
+enum {CSG_A, CSG_B, CSG_C, CSG_D,
+    CSG_A_U_B, CSG_A_U_C, CSG_B_U_C,
+    CSG_A_I_B, CSG_A_I_C, CSG_B_I_C,
+    CSG_A_S_B, CSG_B_S_A,
+    CSG_A_S_C, CSG_C_S_A,
+    CSG_B_S_C, CSG_C_S_B};
 
 GLfloat rotX, rotY, rotZ;
 int csg_op = CSG_B_I_C;
@@ -107,7 +107,14 @@ void desenhaCubo(void) {
 }
 
 void desenhaCilindro(void) {
-
+    glPushMatrix();
+    glColor3f(1.0, 1.0, 0.0);
+    GLUquadricObj *quadratic;
+    quadratic = gluNewQuadric();
+    glTranslatef(0, 3, 0);
+    glRotatef(90, 1, 0, 0);
+    gluCylinder(quadratic,1.0,1.0,6,40,40);
+    glPopMatrix();
 }
 
 
@@ -155,6 +162,10 @@ void redraw() {
         case CSG_C:
             draw(desenhaCubo);
             drawBitmapText("Objeto C",-2,9,0);
+            break;
+        case CSG_D:
+            draw(desenhaCilindro);
+            drawBitmapText("Objeto D",-2,9,0);
             break;
         case CSG_A_U_B:
             uniao(desenhaCone, desenhaEsfera);
@@ -275,6 +286,7 @@ void menuCallback(void){
     glutAddMenuEntry("Apenas A", CSG_A);
     glutAddMenuEntry("Apenas B", CSG_B);
     glutAddMenuEntry("Apenas C", CSG_C);
+    glutAddMenuEntry("Apenas D", CSG_D);
 
     glutAddMenuEntry("A Uniao B", CSG_A_U_B);
     glutAddMenuEntry("A Uniao C", CSG_A_U_C);
@@ -320,6 +332,7 @@ int main(int argc, char **argv) {
     menuCallback();
 
     glEnable(GL_CULL_FACE);
+
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
 
