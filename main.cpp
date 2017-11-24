@@ -4,6 +4,8 @@
 #include <iostream>
 #include <GL/gl.h>
 #include <GL/glut.h>
+#include <GL/freeglut.h>
+
 
 enum {CSG_A, CSG_B, CSG_C, CSG_D,
     CSG_A_U_B, CSG_A_U_C, CSG_B_U_C,
@@ -109,11 +111,9 @@ void desenhaCubo(void) {
 void desenhaCilindro(void) {
     glPushMatrix();
     glColor3f(1.0, 1.0, 0.0);
-    GLUquadricObj *quadratic;
-    quadratic = gluNewQuadric();
     glTranslatef(0, 3, 0);
     glRotatef(90, 1, 0, 0);
-    gluCylinder(quadratic,1.0,1.0,6,40,40);
+    glutSolidCylinder(1.2, 5, 60, 60);
     glPopMatrix();
 }
 
