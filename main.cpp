@@ -1,23 +1,20 @@
 /*
 ** Doing CSG with stencil
 */
+#include <iostream>
 #include <GL/gl.h>
 #include <GL/glut.h>
-#include <math.h>
-//#include <windows.h>
 
-enum {CSG_A, CSG_B, CSG_A_OR_B, CSG_A_AND_B, CSG_A_SUB_B, CSG_B_SUB_A};
-enum {SPHERE = 1, CONE};
+enum {CSG_A, CSG_B, CSG_C,
+      CSG_A_U_B, CSG_A_U_C, CSG_B_U_C,
+      CSG_A_I_B, CSG_A_I_C, CSG_B_I_C,
+      CSG_A_S_B, CSG_B_S_A,
+      CSG_A_S_C, CSG_C_S_A,
+      CSG_B_S_C, CSG_C_S_B};
 
 GLfloat rotX, rotY, rotZ;
-int csg_op = CSG_B;
-int x_ini,y_ini, botao;
+int csg_op = CSG_B_I_C;
 GLfloat lightpos[] = {-25.f, 0.f, 50.f, 1.f};
-static GLfloat sphere_mat[] = {1.f, .5f, 0.f, 1.f};
-static GLfloat cone_mat[] = {0.f, .5f, 1.f, 1.f};
-GLUquadricObj *sphere, *cone, *base;
-GLfloat coneX = 0.f, coneY = 0.f, coneZ = 0.f;
-GLfloat sphereX = 0.f, sphereY = 0.f, sphereZ = 0.f;
 
 /*
 ** Set stencil buffer to show the part of a (front or back face)
@@ -49,15 +46,17 @@ void firstInsideSecond(void(*desenhaObjetoA)(void), void(*desenhaObjetoB)(void),
 
     glCullFace(face);
     desenhaObjetoA(); /* draw the part of a that's in b */
+    glDisable(GL_STENCIL_TEST);
 }
 
 void corrigeProfundidade(void(*desenhaObjetoA)(void)) {
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
     glEnable(GL_DEPTH_TEST);
-    glDisable(GL_STENCIL_TEST);
     glDepthFunc(GL_ALWAYS);
-    desenhaObjetoA(); /* draw the front face of a, fixing the depth buffer */
+    desenhaObjetoA();
     glDepthFunc(GL_LESS);
+    glDisable(GL_DEPTH_TEST);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
 /* "or" is easy; simply draw both objects with depth buffering on */
@@ -73,7 +72,6 @@ void interseccao(void(*desenhaObjetoA)(void), void(*desenhaObjetoB)(void)) {
     firstInsideSecond(desenhaObjetoA, desenhaObjetoB, GL_BACK, GL_NOTEQUAL);
     corrigeProfundidade(desenhaObjetoB);
     firstInsideSecond(desenhaObjetoB, desenhaObjetoA, GL_BACK, GL_NOTEQUAL);
-    glDisable(GL_STENCIL_TEST); /* reset things */
 }
 
 /* subtract b from a */
@@ -81,32 +79,50 @@ void subtracao(void(*desenhaObjetoA)(void), void(*desenhaObjetoB)(void)) {
     firstInsideSecond(desenhaObjetoA, desenhaObjetoB, GL_FRONT, GL_NOTEQUAL);
     corrigeProfundidade(desenhaObjetoB);
     firstInsideSecond(desenhaObjetoB, desenhaObjetoA, GL_BACK, GL_EQUAL);
-    glDisable(GL_STENCIL_TEST); /* reset things */
 }
 
 void desenhaCone(void) {
     glPushMatrix();
-    glColor3f(0.0, 0.0, 1.0);
-    glTranslatef(coneX, coneY, coneZ);
-    glTranslatef(0.f, 0.f, -30.f);
-    glCallList(CONE);
+    glColor3f(0.0, 1.0, 0.0);
+    glTranslatef(-3, 0, 0);
+    glRotatef(90, 0, 1, 0);
+    glutSolidCone(2.5, 8, 40, 40);
     glPopMatrix();
 }
 
 void desenhaEsfera(void) {
     glPushMatrix();
     glColor3f(1.0, 0.0, 0.0);
-    glTranslatef(sphereX, sphereY, sphereZ);
-    glCallList(SPHERE);
+    glTranslatef(0, 0, 0);
+    glutSolidSphere(2.5, 40, 40);
     glPopMatrix();
 }
 
 void desenhaCubo(void) {
-
+    glPushMatrix();
+    glColor3f(0.0, 0.0, 1.0);
+    glTranslatef(0, 0, 0);
+    glutSolidCube(4);
+    glPopMatrix();
 }
 
 void desenhaCilindro(void) {
 
+}
+
+
+void drawBitmapText(char *string,float x,float y,float z)
+{
+    glPushMatrix();
+    glLoadIdentity();
+    char *c;
+    glRasterPos3f(x, y,z);
+
+    for (c=string; *c != '\0'; c++)
+    {
+        glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, *c);
+    }
+    glPopMatrix();
 }
 
 /* just draw single object */
@@ -125,29 +141,72 @@ void redraw() {
     glRotatef(rotY, 0, 1, 0);
     glRotatef(rotZ, 0, 0, 1);
 
-    glPushMatrix();
+    //glPushMatrix();
 
     switch(csg_op) {
         case CSG_A:
             draw(desenhaCone);
+            drawBitmapText("Objeto A",-2,9,0);
             break;
         case CSG_B:
             draw(desenhaEsfera);
+            drawBitmapText("Objeto B",-2,9,0);
             break;
-        case CSG_A_OR_B:
+        case CSG_C:
+            draw(desenhaCubo);
+            drawBitmapText("Objeto C",-2,9,0);
+            break;
+        case CSG_A_U_B:
             uniao(desenhaCone, desenhaEsfera);
+            drawBitmapText("A uniao B",-2,9,0);
             break;
-        case CSG_A_AND_B:
+        case CSG_A_U_C:
+            uniao(desenhaCone, desenhaCubo);
+            drawBitmapText("A uniao C",-2,9,0);
+            break;
+        case CSG_B_U_C:
+            uniao(desenhaEsfera, desenhaCubo);
+            drawBitmapText("B uniao C",-2,9,0);
+            break;
+        case CSG_A_I_B:
             interseccao(desenhaCone, desenhaEsfera);
+            drawBitmapText("A interseccao B",-3,9,0);
             break;
-        case CSG_A_SUB_B:
+        case CSG_A_I_C:
+            interseccao(desenhaCone, desenhaCubo);
+            drawBitmapText("A interseccao C",-3,9,0);
+            break;
+        case CSG_B_I_C:
+            interseccao(desenhaEsfera, desenhaCubo);
+            drawBitmapText("B interseccao C",-3,9,0);
+            break;
+        case CSG_A_S_B:
             subtracao(desenhaCone, desenhaEsfera);
+            drawBitmapText("A subtracao B",-2,9,0);
             break;
-        case CSG_B_SUB_A:
+        case CSG_B_S_A:
             subtracao(desenhaEsfera, desenhaCone);
+            drawBitmapText("B subtracao A",-2,9,0);
+            break;
+        case CSG_A_S_C:
+            subtracao(desenhaCone, desenhaCubo);
+            drawBitmapText("A subtracao C",-2,9,0);
+            break;
+        case CSG_C_S_A:
+            subtracao(desenhaCubo, desenhaCone);
+            drawBitmapText("C subtracao A",-2,9,0);
+            break;
+        case CSG_B_S_C:
+            subtracao(desenhaEsfera, desenhaCubo);
+            drawBitmapText("B subtracao C",-2,9,0);
+            break;
+        case CSG_C_S_B:
+            subtracao(desenhaCubo, desenhaEsfera);
+            drawBitmapText("C subtracao B",-2,9,0);
             break;
     }
-    glPopMatrix();
+    //glPopMatrix();
+    //drawBitmapText("todos os direitos reservados",-5,-9,0); //kkkkk
     glutSwapBuffers();
 }
 
@@ -175,16 +234,32 @@ void specialKey(int key, int, int) {
 
 void key(unsigned char key, int, int) {
     switch(key) {
-        case 'a':
+        case 'q':
+            exit(0);
+        case '-':
             rotZ -= 1;
             glutPostRedisplay();
             break;
-        case 's':
+        case '+':
             rotZ += 1;
             glutPostRedisplay();
             break;
-        case 'q':
-            exit(0);
+        case 'a':
+            rotY -= 1;
+            glutPostRedisplay();
+            break;
+        case 'd':
+            rotY += 1;
+            glutPostRedisplay();
+            break;
+        case 'w':
+            rotX -= 1;
+            glutPostRedisplay();
+            break;
+        case 's':
+            rotX += 1;
+            glutPostRedisplay();
+            break;
     }
 }
 
@@ -194,13 +269,30 @@ void menu(int csgop) {
 }
 
 void menuCallback(void){
+
+
     glutCreateMenu(menu);
-    glutAddMenuEntry("A only", CSG_A);
-    glutAddMenuEntry("B only", CSG_B);
-    glutAddMenuEntry("A or B", CSG_A_OR_B);
-    glutAddMenuEntry("A and B", CSG_A_AND_B);
-    glutAddMenuEntry("A sub B", CSG_A_SUB_B);
-    glutAddMenuEntry("B sub A", CSG_B_SUB_A);
+    glutAddMenuEntry("Apenas A", CSG_A);
+    glutAddMenuEntry("Apenas B", CSG_B);
+    glutAddMenuEntry("Apenas C", CSG_C);
+
+    glutAddMenuEntry("A Uniao B", CSG_A_U_B);
+    glutAddMenuEntry("A Uniao C", CSG_A_U_C);
+    glutAddMenuEntry("B Uniao C", CSG_B_U_C);
+
+    glutAddMenuEntry("A interseccao B", CSG_A_I_B);
+    glutAddMenuEntry("A interseccao C", CSG_A_I_C);
+    glutAddMenuEntry("B interseccao C", CSG_B_I_C);
+
+    glutAddMenuEntry("A subtracao B", CSG_A_S_B);
+    glutAddMenuEntry("B subtracao A", CSG_B_S_A);
+
+    glutAddMenuEntry("A subtracao C", CSG_A_S_C);
+    glutAddMenuEntry("C subtracao A", CSG_C_S_A);
+
+    glutAddMenuEntry("B subtracao C", CSG_B_S_C);
+    glutAddMenuEntry("C subtracao B", CSG_C_S_B);
+
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
@@ -210,13 +302,22 @@ void  mouse(int key, int state, int x, int y) {
 
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
+
     glutInitWindowSize(600, 600);
+    glutInitWindowPosition(0,0);
     glutInitDisplayMode(GLUT_STENCIL|GLUT_DEPTH|GLUT_DOUBLE);
-    (void)glutCreateWindow("CSG");
+    glutCreateWindow("CSG");
     glClearColor(1, 1, 1, 0);
+
     glMatrixMode(GL_PROJECTION);
-    glOrtho(-50., 50., -50., 50., -50., 50.);
+    glOrtho(-10, 10, -10, 10, -10, 10);
     glMatrixMode(GL_MODELVIEW);
+
+    glutDisplayFunc(redraw);
+    glutKeyboardFunc(key);
+    glutSpecialFunc(specialKey);
+    glutMouseFunc(mouse);
+    menuCallback();
 
     glEnable(GL_CULL_FACE);
     glEnable(GL_LIGHTING);
@@ -225,30 +326,6 @@ int main(int argc, char **argv) {
     glLightfv(GL_LIGHT0, GL_POSITION, lightpos);
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     glEnable(GL_COLOR_MATERIAL);
-
-    glutDisplayFunc(redraw);
-    glutKeyboardFunc(key);
-    glutSpecialFunc(specialKey);
-    glutMouseFunc(mouse);
-    menuCallback();
-
-    glNewList(SPHERE, GL_COMPILE);
-    sphere = gluNewQuadric();
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, sphere_mat);
-    gluSphere(sphere, 20.f, 64, 64);
-    gluDeleteQuadric(sphere);
-    glEndList();
-
-    glNewList(CONE, GL_COMPILE);
-    cone = gluNewQuadric();
-    base = gluNewQuadric();
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, cone_mat);
-    gluQuadricOrientation(base, GLU_INSIDE);
-    gluDisk(base, 0., 15., 64, 1);
-    gluCylinder(cone, 15., 0., 60., 64, 64);
-    gluDeleteQuadric(cone);
-    gluDeleteQuadric(base);
-    glEndList();
 
     glutMainLoop();
 
