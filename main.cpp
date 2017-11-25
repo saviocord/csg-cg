@@ -8,14 +8,13 @@
 
 
 enum {CSG_A, CSG_B, CSG_C, CSG_D,
-    CSG_A_U_B, CSG_A_U_C, CSG_B_U_C,
-    CSG_A_I_B, CSG_A_I_C, CSG_B_I_C,
+    CSG_A_U_B, CSG_A_I_B,
     CSG_A_S_B, CSG_B_S_A,
-    CSG_A_S_C, CSG_C_S_A,
-    CSG_B_S_C, CSG_C_S_B};
+    CSG_HELP};
 
+int ObjetoA = -1, ObjetoB = -1;
 GLfloat rotX, rotY, rotZ;
-int csg_op = CSG_B_I_C;
+int csg_op = CSG_A;
 GLfloat lightpos[] = {-25.f, 0.f, 50.f, 1.f};
 
 /*
@@ -83,6 +82,7 @@ void subtracao(void(*desenhaObjetoA)(void), void(*desenhaObjetoB)(void)) {
     firstInsideSecond(desenhaObjetoB, desenhaObjetoA, GL_BACK, GL_EQUAL);
 }
 
+/*OBJETO A*/
 void desenhaCone(void) {
     glPushMatrix();
     glColor3f(0.0, 1.0, 0.0);
@@ -92,6 +92,7 @@ void desenhaCone(void) {
     glPopMatrix();
 }
 
+/*OBJETO B*/
 void desenhaEsfera(void) {
     glPushMatrix();
     glColor3f(1.0, 0.0, 0.0);
@@ -100,6 +101,7 @@ void desenhaEsfera(void) {
     glPopMatrix();
 }
 
+/*OBJETO C*/
 void desenhaCubo(void) {
     glPushMatrix();
     glColor3f(0.0, 0.0, 1.0);
@@ -108,6 +110,7 @@ void desenhaCubo(void) {
     glPopMatrix();
 }
 
+/*OBJETO D*/
 void desenhaCilindro(void) {
     glPushMatrix();
     glColor3f(1.0, 1.0, 0.0);
@@ -151,6 +154,14 @@ void redraw() {
     //glPushMatrix();
 
     switch(csg_op) {
+        case CSG_HELP:
+            drawBitmapText("Para Selecionar o Objeto A Precione F1",-7,0,0);
+            drawBitmapText("Para Selecionar o Objeto B Precione F2",-7,-1,0);
+            drawBitmapText("Cone Precione 1",-7,-2,0);
+            drawBitmapText("Esfera Precione 2",-7,-3,0);
+            drawBitmapText("Cubo Precione 3",-7,-4,0);
+            drawBitmapText("Cilindro Precione 4",-7,-5,0);
+            break;
         case CSG_A:
             draw(desenhaCone);
             drawBitmapText("Objeto A",-2,9,0);
@@ -168,55 +179,130 @@ void redraw() {
             drawBitmapText("Objeto D",-2,9,0);
             break;
         case CSG_A_U_B:
-            uniao(desenhaCone, desenhaEsfera);
+            if((ObjetoA == 0)&&(ObjetoB == 1)){
+                uniao(desenhaCone, desenhaEsfera);
+            }
+            else if ((ObjetoA == 0)&&(ObjetoB == 2)){
+                uniao(desenhaCone, desenhaCubo);
+            }
+            else if ((ObjetoA == 0)&&(ObjetoB == 3)){
+                uniao(desenhaCone, desenhaCilindro);
+            }
+            else if ((ObjetoA == 1)&&(ObjetoB == 2)){
+                uniao(desenhaEsfera, desenhaCubo);
+            }
+            else if ((ObjetoA == 1)&&(ObjetoB == 3)){
+                uniao(desenhaEsfera, desenhaCilindro);
+            }
+            else if ((ObjetoA == 2)&&(ObjetoB == 3)){
+                uniao(desenhaCubo, desenhaCilindro);
+            }
+            else{
+               drawBitmapText("Objeto A e B nao foi Selecionado",-5,0,0);
+            }
             drawBitmapText("A uniao B",-2,9,0);
             break;
-        case CSG_A_U_C:
-            uniao(desenhaCone, desenhaCubo);
-            drawBitmapText("A uniao C",-2,9,0);
-            break;
-        case CSG_B_U_C:
-            uniao(desenhaEsfera, desenhaCubo);
-            drawBitmapText("B uniao C",-2,9,0);
-            break;
         case CSG_A_I_B:
-            interseccao(desenhaCone, desenhaEsfera);
+            if((ObjetoA == 0)&&(ObjetoB == 1)){
+                interseccao(desenhaCone, desenhaEsfera);
+            }
+            else if ((ObjetoA == 0)&&(ObjetoB == 2)){
+                interseccao(desenhaCone, desenhaCubo);
+            }
+            else if ((ObjetoA == 0)&&(ObjetoB == 3)){
+                interseccao(desenhaCone, desenhaCilindro);
+            }
+            else if ((ObjetoA == 1)&&(ObjetoB == 2)){
+                interseccao(desenhaEsfera, desenhaCubo);
+            }
+            else if ((ObjetoA == 1)&&(ObjetoB == 3)){
+                interseccao(desenhaEsfera, desenhaCilindro);
+            }
+            else if ((ObjetoA == 2)&&(ObjetoB == 3)){
+                interseccao(desenhaCubo, desenhaCilindro);
+            }
+            else{
+               drawBitmapText("Objeto A e B nao foi Selecionado",-5,0,0);
+            }
             drawBitmapText("A interseccao B",-3,9,0);
             break;
-        case CSG_A_I_C:
-            interseccao(desenhaCone, desenhaCubo);
-            drawBitmapText("A interseccao C",-3,9,0);
-            break;
-        case CSG_B_I_C:
-            interseccao(desenhaEsfera, desenhaCubo);
-            drawBitmapText("B interseccao C",-3,9,0);
-            break;
         case CSG_A_S_B:
-            subtracao(desenhaCone, desenhaEsfera);
+            if((ObjetoA == 0)&&(ObjetoB == 1)){
+                subtracao(desenhaCone, desenhaEsfera);
+            }
+            else if ((ObjetoA == 0)&&(ObjetoB == 2)){
+                subtracao(desenhaCone, desenhaCubo);
+            }
+            else if ((ObjetoA == 0)&&(ObjetoB == 3)){
+                subtracao(desenhaCone, desenhaCilindro);
+            }
+            else if ((ObjetoA == 1)&&(ObjetoB == 2)){
+                subtracao(desenhaEsfera, desenhaCubo);
+            }
+            else if ((ObjetoA == 1)&&(ObjetoB == 3)){
+                subtracao(desenhaEsfera, desenhaCilindro);
+            }
+            else if ((ObjetoA == 2)&&(ObjetoB == 3)){
+                subtracao(desenhaCubo, desenhaCilindro);
+            }
+            else{
+               drawBitmapText("Objeto A e B nao foi Selecionado",-5,0,0);
+            }
             drawBitmapText("A subtracao B",-2,9,0);
             break;
         case CSG_B_S_A:
-            subtracao(desenhaEsfera, desenhaCone);
+            if((ObjetoA == 0)&&(ObjetoB == 1)){
+                subtracao(desenhaEsfera, desenhaCone);
+            }
+            else if ((ObjetoA == 0)&&(ObjetoB == 2)){
+                subtracao(desenhaCubo, desenhaCone);
+            }
+            else if ((ObjetoA == 0)&&(ObjetoB == 3)){
+                subtracao(desenhaCilindro, desenhaCone);
+            }
+            else if ((ObjetoA == 1)&&(ObjetoB == 2)){
+                subtracao(desenhaCubo, desenhaEsfera);
+            }
+            else if ((ObjetoA == 1)&&(ObjetoB == 3)){
+                subtracao(desenhaCilindro, desenhaEsfera);
+            }
+            else if ((ObjetoA == 2)&&(ObjetoB == 3)){
+                subtracao(desenhaCilindro, desenhaCubo);
+            }
+            else{
+               drawBitmapText("Objeto A e B nao foi Selecionado",-5,0,0);
+            }
             drawBitmapText("B subtracao A",-2,9,0);
             break;
-        case CSG_A_S_C:
-            subtracao(desenhaCone, desenhaCubo);
-            drawBitmapText("A subtracao C",-2,9,0);
-            break;
-        case CSG_C_S_A:
-            subtracao(desenhaCubo, desenhaCone);
-            drawBitmapText("C subtracao A",-2,9,0);
-            break;
-        case CSG_B_S_C:
-            subtracao(desenhaEsfera, desenhaCubo);
-            drawBitmapText("B subtracao C",-2,9,0);
-            break;
-        case CSG_C_S_B:
-            subtracao(desenhaCubo, desenhaEsfera);
-            drawBitmapText("C subtracao B",-2,9,0);
-            break;
     }
-    //glPopMatrix();
+
+    if(ObjetoA == 0){
+       drawBitmapText("ObjetoA = Cone",-10,-8,0);
+    }
+    else if(ObjetoA == 1){
+       drawBitmapText("ObjetoA = Esfera",-10,-8,0);
+    }
+    else if(ObjetoA == 2){
+       drawBitmapText("ObjetoA = Cubo",-10,-8,0);
+    }
+    else if(ObjetoA == 3){
+       drawBitmapText("ObjetoA = Cilindro",-10,-8,0);
+    }
+
+    if(ObjetoB == 0){
+       drawBitmapText("ObjetoB = Cone",-10,-9,0);
+    }
+    else if(ObjetoB == 1){
+       drawBitmapText("ObjetoB = Esfera",-10,-9,0);
+    }
+    else if(ObjetoB == 2){
+       drawBitmapText("ObjetoB = Cubo",-10,-9,0);
+    }
+    else if(ObjetoB == 3){
+       drawBitmapText("ObjetoB = Cilindro",-10,-9,0);
+    }
+
+    //glPopMatrix();csg_op
     //drawBitmapText("todos os direitos reservados",-5,-9,0); //kkkkk
     glutSwapBuffers();
 }
@@ -239,6 +325,14 @@ void specialKey(int key, int, int) {
         case GLUT_KEY_DOWN:
             rotX += 1;
             glutPostRedisplay();
+            break;
+        case GLUT_KEY_F1:
+            ObjetoA = csg_op;
+            redraw();
+            break;
+        case GLUT_KEY_F2:
+            ObjetoB = csg_op;
+            redraw();
             break;
     }
 }
@@ -271,6 +365,22 @@ void key(unsigned char key, int, int) {
             rotX += 1;
             glutPostRedisplay();
             break;
+        case '1':
+            csg_op = 0;
+            redraw();
+            break;
+        case '2':
+            csg_op = 1;
+            redraw();
+            break;
+        case '3':
+            csg_op = 2;
+            redraw();
+            break;
+        case '4':
+            csg_op = 3;
+            redraw();
+            break;
     }
 }
 
@@ -281,29 +391,16 @@ void menu(int csgop) {
 
 void menuCallback(void){
 
-
     glutCreateMenu(menu);
+    glutAddMenuEntry("Help", CSG_HELP);
     glutAddMenuEntry("Apenas A", CSG_A);
     glutAddMenuEntry("Apenas B", CSG_B);
     glutAddMenuEntry("Apenas C", CSG_C);
     glutAddMenuEntry("Apenas D", CSG_D);
-
     glutAddMenuEntry("A Uniao B", CSG_A_U_B);
-    glutAddMenuEntry("A Uniao C", CSG_A_U_C);
-    glutAddMenuEntry("B Uniao C", CSG_B_U_C);
-
     glutAddMenuEntry("A interseccao B", CSG_A_I_B);
-    glutAddMenuEntry("A interseccao C", CSG_A_I_C);
-    glutAddMenuEntry("B interseccao C", CSG_B_I_C);
-
     glutAddMenuEntry("A subtracao B", CSG_A_S_B);
     glutAddMenuEntry("B subtracao A", CSG_B_S_A);
-
-    glutAddMenuEntry("A subtracao C", CSG_A_S_C);
-    glutAddMenuEntry("C subtracao A", CSG_C_S_A);
-
-    glutAddMenuEntry("B subtracao C", CSG_B_S_C);
-    glutAddMenuEntry("C subtracao B", CSG_C_S_B);
 
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
