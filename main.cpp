@@ -18,27 +18,25 @@ int csg_op = CSG_A;
 GLfloat lightpos[] = {-25.f, 0.f, 50.f, 1.f};
 
 /*
-** Set stencil buffer to show the part of a (front or back face)
-** that's inside b's volume.
-** Requirements: GL_CULL_FACE enabled, depth func GL_LESS
-** Side effects: depth test, stencil func, stencil op
+** Seta o stencil buffer para mostrar a parte do objetoA (face da frente e de tras)
+** que esta dentro do volume do objetoB
 */
 void firstInsideSecond(void(*desenhaObjetoA)(void), void(*desenhaObjetoB)(void), GLenum face, GLenum test) {
     glEnable(GL_DEPTH_TEST);
     glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    glCullFace(face); /* controls which face of a to use*/
-    desenhaObjetoA(); /* draw a face of a into depth buffer */
+    glCullFace(face); /* controla qual face do objetoA sera usada*/
+    desenhaObjetoA(); /* desenha a face do objetoA no depth buffer */
 
-    /* use stencil plane to find parts of a in b */
+    /* usar stencil plane para encontrar partes do objetoA no objetoB*/
     glDepthMask(GL_FALSE);
     glEnable(GL_STENCIL_TEST);
     glStencilFunc(GL_ALWAYS, 0, 0);
     glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
     glCullFace(GL_BACK);
-    desenhaObjetoB(); /* increment the stencil where the front face of b is drawn */
+    desenhaObjetoB(); /* incrementa o stencil onde a face da frente do objetoB é desenhada*/
     glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
     glCullFace(GL_FRONT);
-    desenhaObjetoB(); /* decrement the stencil buffer where the back face of b is drawn */
+    desenhaObjetoB(); /* decrementa o stencil buffer onde a face de tras do objetoB é desenhada*/
     glDepthMask(GL_TRUE);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
@@ -46,7 +44,7 @@ void firstInsideSecond(void(*desenhaObjetoA)(void), void(*desenhaObjetoB)(void),
     glDisable(GL_DEPTH_TEST);
 
     glCullFace(face);
-    desenhaObjetoA(); /* draw the part of a that's in b */
+    desenhaObjetoA(); /* desenha a parte do objetoA que esta no objetoB*/
     glDisable(GL_STENCIL_TEST);
 }
 
@@ -60,7 +58,7 @@ void corrigeProfundidade(void(*desenhaObjetoA)(void)) {
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
-/* "or" is easy; simply draw both objects with depth buffering on */
+/* simplesmente desenha os dois objetos com o depth buffering*/
 void uniao(void(*desenhaObjetoA)(void), void(*desenhaObjetoB)()) {
     glEnable(GL_DEPTH_TEST);
     desenhaObjetoA();
@@ -68,14 +66,14 @@ void uniao(void(*desenhaObjetoA)(void), void(*desenhaObjetoB)()) {
     glDisable(GL_DEPTH_TEST);
 }
 
-/* "and" two objects together */
+/* junta dois objetos*/
 void interseccao(void(*desenhaObjetoA)(void), void(*desenhaObjetoB)(void)) {
     firstInsideSecond(desenhaObjetoA, desenhaObjetoB, GL_BACK, GL_NOTEQUAL);
     corrigeProfundidade(desenhaObjetoB);
     firstInsideSecond(desenhaObjetoB, desenhaObjetoA, GL_BACK, GL_NOTEQUAL);
 }
 
-/* subtract b from a */
+/* subtrai o objetoB do objetoA */
 void subtracao(void(*desenhaObjetoA)(void), void(*desenhaObjetoB)(void)) {
     firstInsideSecond(desenhaObjetoA, desenhaObjetoB, GL_FRONT, GL_NOTEQUAL);
     corrigeProfundidade(desenhaObjetoB);
@@ -120,7 +118,7 @@ void desenhaCilindro(void) {
     glPopMatrix();
 }
 
-
+/*Desenha o texto*/
 void drawBitmapText(char *string,float x,float y,float z)
 {
     glPushMatrix();
@@ -135,7 +133,7 @@ void drawBitmapText(char *string,float x,float y,float z)
     glPopMatrix();
 }
 
-/* just draw single object */
+/* desenha um unico objeto */
 void draw(void(*desenhaObjetoA)(void)) {
     glEnable(GL_DEPTH_TEST);
     desenhaObjetoA();
@@ -143,15 +141,13 @@ void draw(void(*desenhaObjetoA)(void)) {
 }
 
 void redraw() {
-    /* clear stencil each time */
+    /* limpa o stencil toda vez*/
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glRotatef(rotX, 1, 0, 0);
     glRotatef(rotY, 0, 1, 0);
     glRotatef(rotZ, 0, 0, 1);
-
-    //glPushMatrix();
 
     switch(csg_op) {
         case CSG_HELP:
@@ -198,7 +194,7 @@ void redraw() {
                 uniao(desenhaCubo, desenhaCilindro);
             }
             else{
-               drawBitmapText("Objeto A e B nao foi Selecionado",-5,0,0);
+               drawBitmapText("Objetos A e B nao foram Selecionados",-5,0,0);
             }
             drawBitmapText("A uniao B",-2,9,0);
             break;
@@ -222,7 +218,7 @@ void redraw() {
                 interseccao(desenhaCubo, desenhaCilindro);
             }
             else{
-               drawBitmapText("Objeto A e B nao foi Selecionado",-5,0,0);
+               drawBitmapText("Objetos A e B nao foram Selecionados",-5,0,0);
             }
             drawBitmapText("A interseccao B",-3,9,0);
             break;
@@ -246,7 +242,7 @@ void redraw() {
                 subtracao(desenhaCubo, desenhaCilindro);
             }
             else{
-               drawBitmapText("Objeto A e B nao foi Selecionado",-5,0,0);
+               drawBitmapText("Objetos A e B nao foram Selecionados",-5,0,0);
             }
             drawBitmapText("A subtracao B",-2,9,0);
             break;
@@ -270,7 +266,7 @@ void redraw() {
                 subtracao(desenhaCilindro, desenhaCubo);
             }
             else{
-               drawBitmapText("Objeto A e B nao foi Selecionado",-5,0,0);
+               drawBitmapText("Objetos A e B nao foram Selecionados",-5,0,0);
             }
             drawBitmapText("B subtracao A",-2,9,0);
             break;
@@ -302,12 +298,10 @@ void redraw() {
        drawBitmapText("ObjetoB = Cilindro",-10,-9,0);
     }
 
-    //glPopMatrix();csg_op
     //drawBitmapText("todos os direitos reservados",-5,-9,0); //kkkkk
     glutSwapBuffers();
 }
 
-/* special keys, like array and F keys */
 void specialKey(int key, int, int) {
     switch(key) {
         case GLUT_KEY_LEFT:
